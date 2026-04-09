@@ -91,32 +91,42 @@ High visual fidelity ≠ physical reliability. This is the fundamental finding.
 
 ```
 video-gen-eval/
-├── evaluators/
-│   ├── vbench_evaluator.py       # 16-dimension VBench++ integration
-│   ├── ivebench_evaluator.py     # IVEBench instruction compliance
-│   ├── tivibench_evaluator.py    # Causal reasoning evaluation
-│   ├── physion_evaluator.py      # Physical realism verification
-│   └── ewm_score.py              # Closed-loop EWMScore implementation
-├── judge/
-│   ├── physics_judge.py          # MLLM-as-judge pipeline
-│   ├── rationale_generator.py    # Natural language failure rationales
-│   └── anomaly_detector.py       # Physical violation detection
-├── embodied/
-│   ├── rl_action_api.py          # Standardized RL agent interface
-│   ├── world_wrapper.py          # Wraps generative model as RL env
-│   └── task_evaluator.py         # Embodied task success measurement
-├── pipeline/
-│   ├── unified_pipeline.py       # Master evaluation orchestrator
-│   ├── batch_processor.py        # Async batch video processing
-│   └── score_aggregator.py       # EWMScore computation
-├── tracking/
-│   ├── mlflow_tracker.py         # MLflow experiment logging
-│   └── wandb_tracker.py          # Weights & Biases integration
 ├── benchmarks/
-│   ├── model_comparison.py       # Multi-model benchmark runner
-│   └── results/                  # Documented benchmark results
+│   ├── __init__.py
+│   ├── model_comparison.py
+│   └── results/
+│       └── example_results.json
+├── embodied/
+│   ├── __init__.py
+│   ├── rl_action_api.py
+│   ├── task_evaluator.py
+│   └── world_wrapper.py
+├── evaluators/
+│   ├── __init__.py
+│   ├── ewm_score.py
+│   ├── ivebench_evaluator.py
+│   ├── physion_evaluator.py
+│   ├── tivibench_evaluator.py
+│   └── vbench_evaluator.py
+├── judge/
+│   ├── __init__.py
+│   ├── anomaly_detector.py
+│   ├── physics_judge.py
+│   └── rationale_generator.py
+├── pipeline/
+│   ├── __init__.py
+│   ├── batch_processor.py
+│   ├── score_aggregator.py
+│   └── unified_pipeline.py
 ├── tests/
+│   ├── __init__.py
 │   └── test_evaluators.py
+├── tracking/
+│   ├── __init__.py
+│   ├── mlflow_tracker.py
+│   └── wandb_tracker.py
+├── pyproject.toml
+├── requirements.txt
 └── README.md
 ```
 
