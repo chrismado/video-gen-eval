@@ -1,0 +1,80 @@
+{
+  "video_path": "samples/example_video.mp4",
+  "model_name": "example-model-v1",
+  "ewm_score": 62.5,
+  "evaluators": [
+    {
+      "name": "vbench",
+      "scores": {
+        "motion_smoothness": 0.92,
+        "temporal_flickering": 0.95,
+        "background_stability": 0.97,
+        "subject_consistency": 0.88,
+        "aesthetic_quality": 0.55,
+        "imaging_quality": 0.72,
+        "object_class": 0.68,
+        "multiple_objects": 0.45,
+        "human_action": 0.81,
+        "color": 0.78,
+        "spatial_relationship": 0.52,
+        "scene": 0.65,
+        "temporal_style": 0.60,
+        "overall_consistency": 0.58,
+        "dynamic_degree": 0.70
+      }
+    },
+    {
+      "name": "ivebench",
+      "scores": {
+        "instruction_compliance": 0.73,
+        "attribute_binding": 0.65
+      }
+    },
+    {
+      "name": "tivibench",
+      "scores": {
+        "causal_consistency": 0.60,
+        "temporal_ordering": 0.72
+      }
+    },
+    {
+      "name": "physion",
+      "scores": {
+        "physics_compliance": 0.78
+      }
+    }
+  ],
+  "physics_judgment": {
+    "video_path": "samples/example_video.mp4",
+    "violations": [
+      {
+        "violation_type": "gravity_violation",
+        "frame_range": [24, 30],
+        "severity": 0.35,
+        "rationale": "Object floats upward without applied force between frames 24-30."
+      }
+    ],
+    "overall_physics_score": 0.78,
+    "frame_count": 120,
+    "violation_count": 1
+  },
+  "raw_scores": {
+    "motion_smoothness": 0.92,
+    "temporal_flickering": 0.95,
+    "background_stability": 0.97,
+    "subject_consistency": 0.88,
+    "aesthetic_quality": 0.55,
+    "imaging_quality": 0.72,
+    "object_class": 0.68,
+    "multiple_objects": 0.45,
+    "human_action": 0.81,
+    "color": 0.78,
+    "spatial_relationship": 0.52,
+    "scene": 0.65,
+    "temporal_style": 0.60,
+    "overall_consistency": 0.58,
+    "dynamic_degree": 0.70,
+    "physics_compliance": 0.78
+  },
+  "timestamp": "2026-04-09T12:00:00+0000"
+}
