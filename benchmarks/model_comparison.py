@@ -9,22 +9,21 @@ Usage:
     python -m benchmarks.model_comparison
     python -m benchmarks.model_comparison --results-dir benchmarks/results/
 """
+
 import argparse
 import json
-import sys
 from pathlib import Path
 from typing import Dict, List, Optional
 
-
 # Column definitions for the results table
 COLUMNS = [
-    ("Model",              "{:<22}"),
-    ("EWMScore",           "{:>9}"),
-    ("VBench",             "{:>8}"),
-    ("Physics",            "{:>9}"),
-    ("IVEBench",           "{:>9}"),
-    ("TiViBench",          "{:>10}"),
-    ("Violations",         "{:>11}"),
+    ("Model", "{:<22}"),
+    ("EWMScore", "{:>9}"),
+    ("VBench", "{:>8}"),
+    ("Physics", "{:>9}"),
+    ("IVEBench", "{:>9}"),
+    ("TiViBench", "{:>10}"),
+    ("Violations", "{:>11}"),
 ]
 
 
@@ -52,12 +51,12 @@ def extract_row(result: Dict) -> Dict:
     model_name = result.get("model_name", Path(result.get("video_path", "unknown")).stem)
 
     return {
-        "model":      model_name[:22],
-        "ewm_score":  result.get("ewm_score"),
-        "vbench":     _avg_vbench(result),
-        "physics":    raw.get("physics_compliance"),
-        "ivebench":   _avg_evaluator(result, "ivebench"),
-        "tivibench":  _avg_evaluator(result, "tivibench"),
+        "model": model_name[:22],
+        "ewm_score": result.get("ewm_score"),
+        "vbench": _avg_vbench(result),
+        "physics": raw.get("physics_compliance"),
+        "ivebench": _avg_evaluator(result, "ivebench"),
+        "tivibench": _avg_evaluator(result, "tivibench"),
         "violations": physics.get("violation_count"),
     }
 

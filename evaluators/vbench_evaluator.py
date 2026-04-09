@@ -4,7 +4,7 @@ VBenchEvaluator: Wrapper around the VBench 16-dimension video quality benchmark.
 Provides a unified evaluate() interface returning EvaluatorResult,
 consistent with the UnifiedPipeline contract.
 """
-from pathlib import Path
+
 from typing import Any, Dict, List, Optional
 
 from pipeline.unified_pipeline import EvaluatorResult

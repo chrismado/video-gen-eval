@@ -9,9 +9,11 @@ This is the key upgrade over open-loop evaluation:
 instead of scoring finished videos, we score models
 under continuous interactive pressure.
 """
+
+from typing import Dict, Optional, Tuple
+
 import gymnasium as gym
 import numpy as np
-from typing import Any, Dict, Optional, Tuple
 
 
 class WorldModelEnv(gym.Env):
@@ -33,13 +35,17 @@ class WorldModelEnv(gym.Env):
         self.max_steps = max_steps
 
         self.observation_space = gym.spaces.Box(
-            low=0, high=255,
+            low=0,
+            high=255,
             shape=(*resolution, 3),
             dtype=np.uint8,
         )
         # 6-D action: 3D force vector + 3D camera orientation delta
         self.action_space = gym.spaces.Box(
-            low=-1.0, high=1.0, shape=(6,), dtype=np.float32,
+            low=-1.0,
+            high=1.0,
+            shape=(6,),
+            dtype=np.float32,
         )
 
         self._current_frame: Optional[np.ndarray] = None
@@ -65,6 +71,7 @@ class WorldModelEnv(gym.Env):
             if frame.shape[:2] != self.resolution:
                 # Resize to expected resolution via simple nearest-neighbor
                 import cv2
+
                 frame = cv2.resize(frame, (self.resolution[1], self.resolution[0]))
         else:
             # Ask the model for an initial frame with a null action
@@ -95,9 +102,7 @@ class WorldModelEnv(gym.Env):
         action = np.asarray(action, dtype=np.float32)
 
         # Generate next frame through the world model
-        next_frame = np.asarray(
-            self.model(self._current_frame, action), dtype=np.uint8
-        )
+        next_frame = np.asarray(self.model(self._current_frame, action), dtype=np.uint8)
 
         # Compute physics-based reward
         reward = self.compute_physics_reward(self._current_frame, next_frame, action)
@@ -113,9 +118,9 @@ class WorldModelEnv(gym.Env):
         info = {
             "step": self._step_count,
             "reward": reward,
-            "frame_diff_mean": float(np.mean(np.abs(
-                next_frame.astype(np.float32) - self._prev_frame.astype(np.float32)
-            ))),
+            "frame_diff_mean": float(
+                np.mean(np.abs(next_frame.astype(np.float32) - self._prev_frame.astype(np.float32)))
+            ),
         }
 
         return next_frame, reward, terminated, truncated, info
@@ -169,8 +174,8 @@ class WorldModelEnv(gym.Env):
         # --- Penalty 3: Gravity violations ---
         # Check lower half: if objects move upward without upward force.
         h = prev_frame.shape[0]
-        lower_half_diff = diff[h // 2:, :, :]
-        upper_half_diff = diff[:h // 2, :, :]
+        lower_half_diff = diff[h // 2 :, :, :]
+        upper_half_diff = diff[: h // 2, :, :]
 
         upward_force = action[1] if len(action) > 1 else 0.0  # y-component
         lower_activity = float(np.mean(lower_half_diff))

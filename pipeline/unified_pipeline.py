@@ -8,23 +8,22 @@ a single structured report.
 Usage:
     python -m pipeline.unified_pipeline --video path/to/video.mp4 --all-dimensions
 """
+
 import argparse
 import json
-import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import numpy as np
-
-from evaluators.ewm_score import EWMScorer, METRIC_BOUNDS
-from judge.physics_judge import PhysicsJudge, JudgmentResult
+from evaluators.ewm_score import EWMScorer
+from judge.physics_judge import PhysicsJudge
 
 
 @dataclass
 class EvaluatorResult:
     """Result from a single evaluator."""
+
     name: str
     scores: Dict[str, float] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -42,6 +41,7 @@ class EvaluatorResult:
 @dataclass
 class PipelineReport:
     """Consolidated report from all evaluators."""
+
     video_path: str
     ewm_score: Optional[float] = None
     evaluator_results: List[EvaluatorResult] = field(default_factory=list)
@@ -114,10 +114,12 @@ class UnifiedPipeline:
         if self.enable_physion:
             judgment = self.physics_judge.judge(video_path)
             report.physics_judgment = judgment.to_dict()
-            report.evaluator_results.append(EvaluatorResult(
-                name="physion",
-                scores={"physics_compliance": judgment.overall_physics_score},
-            ))
+            report.evaluator_results.append(
+                EvaluatorResult(
+                    name="physion",
+                    scores={"physics_compliance": judgment.overall_physics_score},
+                )
+            )
 
         # 5. Aggregate raw scores from all evaluators into a single dict
         for er in report.evaluator_results:
@@ -148,6 +150,7 @@ class UnifiedPipeline:
         """Run VBench 16-dimension assessment."""
         try:
             from vbench import VBench
+
             bench = VBench()
             results = bench.evaluate(video_path)
             scores = {}
@@ -170,6 +173,7 @@ class UnifiedPipeline:
         """Run IVEBench instruction compliance evaluation."""
         try:
             from ivebench import IVEBench
+
             bench = IVEBench()
             results = bench.evaluate(video_path)
             scores = {}
@@ -187,6 +191,7 @@ class UnifiedPipeline:
         """Run TiViBench causal reasoning evaluation."""
         try:
             from tivibench import TiViBench
+
             bench = TiViBench()
             results = bench.evaluate(video_path)
             scores = {}
@@ -205,7 +210,8 @@ class UnifiedPipeline:
 # CLI entry point
 # ------------------------------------------------------------------
 
-def main():
+
+def main() -> None:
     parser = argparse.ArgumentParser(description="Unified Physion-Judge evaluation pipeline")
     parser.add_argument("--video", required=True, help="Path to video file")
     parser.add_argument("--output", default=None, help="Output JSON path (default: <video>.report.json)")

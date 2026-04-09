@@ -13,16 +13,19 @@ The Perception-Functionality Gap:
   Models with high VBench scores frequently fail closed-loop physical tasks.
   EWMScore reveals this gap that open-loop metrics cannot detect.
 """
-from dataclasses import dataclass
+
 import json
-import numpy as np
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional, Union
+
+import numpy as np
 
 
 @dataclass
 class MetricBounds:
     """Empirically defined normalization bounds per metric."""
+
     lower: float
     upper: float
 
@@ -31,22 +34,22 @@ class MetricBounds:
 # Lower bounds represent worst observed model performance; upper bounds represent
 # best observed performance across the evaluation corpus.
 METRIC_BOUNDS: Dict[str, MetricBounds] = {
-    "motion_smoothness":     MetricBounds(0.706, 0.997),
-    "temporal_flickering":   MetricBounds(0.800, 0.998),
-    "background_stability":  MetricBounds(0.850, 0.995),
-    "subject_consistency":   MetricBounds(0.710, 0.980),
-    "aesthetic_quality":     MetricBounds(0.300, 0.750),
-    "imaging_quality":       MetricBounds(0.400, 0.850),
-    "object_class":          MetricBounds(0.200, 0.950),
-    "multiple_objects":      MetricBounds(0.100, 0.850),
-    "human_action":          MetricBounds(0.600, 0.990),
-    "color":                 MetricBounds(0.500, 0.950),
-    "spatial_relationship":  MetricBounds(0.200, 0.800),
-    "scene":                 MetricBounds(0.300, 0.900),
-    "temporal_style":        MetricBounds(0.150, 0.850),
-    "overall_consistency":   MetricBounds(0.150, 0.800),
-    "dynamic_degree":        MetricBounds(0.000, 1.000),
-    "physics_compliance":    MetricBounds(0.000, 0.850),
+    "motion_smoothness": MetricBounds(0.706, 0.997),
+    "temporal_flickering": MetricBounds(0.800, 0.998),
+    "background_stability": MetricBounds(0.850, 0.995),
+    "subject_consistency": MetricBounds(0.710, 0.980),
+    "aesthetic_quality": MetricBounds(0.300, 0.750),
+    "imaging_quality": MetricBounds(0.400, 0.850),
+    "object_class": MetricBounds(0.200, 0.950),
+    "multiple_objects": MetricBounds(0.100, 0.850),
+    "human_action": MetricBounds(0.600, 0.990),
+    "color": MetricBounds(0.500, 0.950),
+    "spatial_relationship": MetricBounds(0.200, 0.800),
+    "scene": MetricBounds(0.300, 0.900),
+    "temporal_style": MetricBounds(0.150, 0.850),
+    "overall_consistency": MetricBounds(0.150, 0.800),
+    "dynamic_degree": MetricBounds(0.000, 1.000),
+    "physics_compliance": MetricBounds(0.000, 0.850),
 }
 
 N_METRICS = 16
@@ -87,7 +90,6 @@ class EWMScorer:
             raise ValueError("No valid metrics found in raw_scores")
 
         normalized = [self.normalize(raw_scores[k], k) for k in valid_keys]
-        n = len(valid_keys)
         return float(np.mean(normalized) * 100)
 
     def compute_detailed(self, raw_scores: Dict[str, float]) -> Dict:

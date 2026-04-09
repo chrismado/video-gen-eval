@@ -6,9 +6,11 @@ metric collection, and optional video recording.
 Usage:
     python -m embodied.world_wrapper
 """
+
+from typing import Any, Dict, List, Optional, Tuple
+
 import gymnasium as gym
 import numpy as np
-from typing import Any, Dict, List, Optional, Tuple
 
 from embodied.rl_action_api import WorldModelEnv
 
@@ -90,8 +92,10 @@ class WorldModelWrapper(gym.Wrapper):
 # ------------------------------------------------------------------
 
 if __name__ == "__main__":
+
     class DummyModel:
         """Trivial model that returns a slightly noisy copy of the input."""
+
         def __call__(self, frame: np.ndarray, action: np.ndarray) -> np.ndarray:
             noise = np.random.randint(-5, 6, size=frame.shape, dtype=np.int16)
             return np.clip(frame.astype(np.int16) + noise, 0, 255).astype(np.uint8)

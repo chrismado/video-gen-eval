@@ -11,16 +11,14 @@ Output is a structured list of violations, each with:
   - severity: float in [0, 1], higher = more severe
   - rationale: natural language explanation from the MLLM
 """
-import json
-import subprocess
+
 import tempfile
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import cv2
 import numpy as np
-
 
 # Physion-Eval physical violation categories (subset of 22)
 VIOLATION_TYPES = [
@@ -52,6 +50,7 @@ VIOLATION_TYPES = [
 @dataclass
 class Violation:
     """A single detected physical violation."""
+
     violation_type: str
     frame_range: Tuple[int, int]
     severity: float
@@ -69,6 +68,7 @@ class Violation:
 @dataclass
 class JudgmentResult:
     """Complete judgment for a video."""
+
     video_path: str
     violations: List[Violation] = field(default_factory=list)
     overall_physics_score: float = 1.0
@@ -138,9 +138,7 @@ class PhysicsJudge:
         if result.violations:
             total_severity = sum(v.severity for v in result.violations)
             max_possible = len(frames) / self.sample_fps  # rough duration proxy
-            result.overall_physics_score = float(
-                np.clip(1.0 - total_severity / max(max_possible, 1.0), 0.0, 1.0)
-            )
+            result.overall_physics_score = float(np.clip(1.0 - total_severity / max(max_possible, 1.0), 0.0, 1.0))
 
         return result
 
@@ -193,8 +191,8 @@ class PhysicsJudge:
 
             # Check for gravity-defying vertical motion
             h = diff.shape[0]
-            upper_activity = float(np.mean(diff[:h // 3, :]))
-            lower_activity = float(np.mean(diff[2 * h // 3:, :]))
+            upper_activity = float(np.mean(diff[: h // 3, :]))
+            lower_activity = float(np.mean(diff[2 * h // 3 :, :]))
             if upper_activity > lower_activity * 2.0 and upper_activity > 20.0:
                 anomalies.append("gravity_violation")
 
@@ -203,13 +201,15 @@ class PhysicsJudge:
                 anomalies.append("object_permanence")
 
             for atype in anomalies:
-                candidates.append({
-                    "frame_start": i - 1,
-                    "frame_end": i,
-                    "anomaly_type": atype,
-                    "mean_diff": mean_diff,
-                    "max_diff": max_diff,
-                })
+                candidates.append(
+                    {
+                        "frame_start": i - 1,
+                        "frame_end": i,
+                        "anomaly_type": atype,
+                        "mean_diff": mean_diff,
+                        "max_diff": max_diff,
+                    }
+                )
 
         # Merge adjacent candidates of the same type
         return self._merge_candidates(candidates)
@@ -222,8 +222,7 @@ class PhysicsJudge:
         merged = [candidates[0]]
         for c in candidates[1:]:
             prev = merged[-1]
-            if (c["anomaly_type"] == prev["anomaly_type"]
-                    and c["frame_start"] <= prev["frame_end"] + 2):
+            if c["anomaly_type"] == prev["anomaly_type"] and c["frame_start"] <= prev["frame_end"] + 2:
                 prev["frame_end"] = c["frame_end"]
                 prev["mean_diff"] = max(prev["mean_diff"], c["mean_diff"])
                 prev["max_diff"] = max(prev["max_diff"], c["max_diff"])
@@ -294,11 +293,11 @@ class PhysicsJudge:
 
             # Save frames as temporary images
             with tempfile.TemporaryDirectory() as tmpdir:
-                paths = []
+                image_paths: list[str] = []
                 for idx in (frame_start, min(frame_end, len(frames) - 1)):
-                    p = Path(tmpdir) / f"frame_{idx}.jpg"
-                    cv2.imwrite(str(p), cv2.cvtColor(frames[idx], cv2.COLOR_RGB2BGR))
-                    paths.append(str(p))
+                    image_path = Path(tmpdir) / f"frame_{idx}.jpg"
+                    cv2.imwrite(str(image_path), cv2.cvtColor(frames[idx], cv2.COLOR_RGB2BGR))
+                    image_paths.append(str(image_path))
 
                 prompt = (
                     f"Analyze these two consecutive video frames for physical violations. "
@@ -310,9 +309,10 @@ class PhysicsJudge:
 
                 # Build request (generic OpenAI-compatible vision endpoint)
                 import base64
+
                 images_b64 = []
-                for p in paths:
-                    with open(p, "rb") as f:
+                for image_path_str in image_paths:
+                    with open(image_path_str, "rb") as f:
                         images_b64.append(base64.b64encode(f.read()).decode())
 
                 payload = {

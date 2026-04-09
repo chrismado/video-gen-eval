@@ -3,7 +3,8 @@ MLflowTracker: Log evaluation results to MLflow for experiment tracking.
 
 Gracefully handles missing mlflow installation.
 """
-from typing import Any, Dict, Optional
+
+from typing import Dict, Optional
 
 from pipeline.unified_pipeline import PipelineReport
 
@@ -26,6 +27,7 @@ class MLflowTracker:
 
         try:
             import mlflow
+
             self._mlflow = mlflow
             if tracking_uri:
                 mlflow.set_tracking_uri(tracking_uri)

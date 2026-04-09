@@ -4,8 +4,10 @@ TaskEvaluator: Evaluate embodied task performance using the WorldModelWrapper.
 Runs a series of episodes with a given policy and world model, collecting
 per-episode statistics and computing aggregate task success metrics.
 """
-import numpy as np
+
 from typing import Any, Callable, Dict, List, Optional, Tuple
+
+import numpy as np
 
 from embodied.world_wrapper import WorldModelWrapper
 

@@ -1,6 +1,6 @@
 """Lazy exports for embodied evaluation helpers."""
-from importlib import import_module
 
+from importlib import import_module
 
 __all__ = [
     "WorldModelEnv",
@@ -21,4 +21,3 @@ def __getattr__(name: str):
     module_name, attr_name = _EXPORTS[name]
     module = import_module(module_name)
     return getattr(module, attr_name)
-

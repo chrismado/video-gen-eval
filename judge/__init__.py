@@ -1,6 +1,6 @@
-from judge.physics_judge import PhysicsJudge, JudgmentResult, Violation, VIOLATION_TYPES
-from judge.rationale_generator import RationaleGenerator
 from judge.anomaly_detector import AnomalyDetector
+from judge.physics_judge import VIOLATION_TYPES, JudgmentResult, PhysicsJudge, Violation
+from judge.rationale_generator import RationaleGenerator
 
 __all__ = [
     "PhysicsJudge",

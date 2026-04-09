@@ -4,7 +4,8 @@ RationaleGenerator: Produce human-readable rationales from JudgmentResults.
 Takes the structured violation data from PhysicsJudge and generates
 formatted text explanations suitable for reports or logging.
 """
-from typing import List, Optional
+
+from typing import List
 
 from judge.physics_judge import JudgmentResult, Violation
 

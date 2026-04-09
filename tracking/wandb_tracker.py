@@ -3,6 +3,7 @@ WandbTracker: Log evaluation results to Weights & Biases for experiment tracking
 
 Gracefully handles missing wandb installation.
 """
+
 from typing import Any, Dict, Optional
 
 from pipeline.unified_pipeline import PipelineReport
@@ -27,6 +28,7 @@ class WandbTracker:
 
         try:
             import wandb
+
             self._wandb = wandb
         except ImportError:
             pass

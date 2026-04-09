@@ -5,7 +5,8 @@ reasoning benchmark for generated videos.
 Assesses whether generated videos exhibit plausible temporal ordering,
 causal consistency, and event sequencing.
 """
-from typing import Any, Dict, Optional
+
+from typing import Any, Dict
 
 from pipeline.unified_pipeline import EvaluatorResult
 

@@ -2,8 +2,10 @@
 ScoreAggregator: Combine and summarize scores from multiple
 PipelineReports for cross-model comparison.
 """
+
+from typing import Any, Dict, List
+
 import numpy as np
-from typing import Any, Dict, List, Optional
 
 from pipeline.unified_pipeline import PipelineReport
 
@@ -15,7 +17,7 @@ class ScoreAggregator:
     across a corpus of evaluated videos or models.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._reports: List[PipelineReport] = []
 
     def add_report(self, report: PipelineReport) -> None:
@@ -39,9 +41,7 @@ class ScoreAggregator:
         if not self._reports:
             return {"n_reports": 0, "ewm_scores": {}, "per_metric": {}}
 
-        ewm_scores = [
-            r.ewm_score for r in self._reports if r.ewm_score is not None
-        ]
+        ewm_scores = [r.ewm_score for r in self._reports if r.ewm_score is not None]
 
         # Collect all raw score keys across reports
         all_keys: set = set()
@@ -50,11 +50,7 @@ class ScoreAggregator:
 
         per_metric: Dict[str, Dict[str, float]] = {}
         for key in sorted(all_keys):
-            values = [
-                r.raw_scores[key]
-                for r in self._reports
-                if key in r.raw_scores
-            ]
+            values = [r.raw_scores[key] for r in self._reports if key in r.raw_scores]
             if values:
                 arr = np.array(values)
                 per_metric[key] = {

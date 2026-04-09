@@ -4,11 +4,12 @@ BatchProcessor: Process multiple videos through the UnifiedPipeline.
 Supports batch evaluation of video files from a list or a directory,
 with progress tracking and result aggregation.
 """
+
 import json
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-from pipeline.unified_pipeline import UnifiedPipeline, PipelineReport
+from pipeline.unified_pipeline import PipelineReport, UnifiedPipeline
 
 
 class BatchProcessor:
@@ -46,7 +47,7 @@ class BatchProcessor:
                 if output_dir:
                     out_path = Path(output_dir) / (Path(video_path).stem + ".report.json")
                     self.pipeline.save_report(report, str(out_path))
-            except Exception as e:
+            except Exception:
                 # Create an error report so the batch continues
                 error_report = PipelineReport(video_path=video_path)
                 error_report.ewm_score = None

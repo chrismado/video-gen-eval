@@ -6,7 +6,8 @@ Provides standalone anomaly detection that can be used independently
 of the full PhysicsJudge pipeline.  Returns a list of Violation objects
 for each detected anomaly.
 """
-from typing import List, Optional
+
+from typing import List
 
 import cv2
 import numpy as np
@@ -63,40 +64,41 @@ class AnomalyDetector:
 
             # Trajectory discontinuity
             if mean_diff > self.diff_threshold:
-                violations.append(Violation(
-                    violation_type="trajectory_discontinuity",
-                    frame_range=(i - 1, i),
-                    severity=min(1.0, mean_diff / 100.0),
-                    rationale=(
-                        f"Abrupt spatial discontinuity between frames {i - 1}-{i} "
-                        f"(mean delta={mean_diff:.1f})."
-                    ),
-                ))
+                violations.append(
+                    Violation(
+                        violation_type="trajectory_discontinuity",
+                        frame_range=(i - 1, i),
+                        severity=min(1.0, mean_diff / 100.0),
+                        rationale=(
+                            f"Abrupt spatial discontinuity between frames {i - 1}-{i} " f"(mean delta={mean_diff:.1f})."
+                        ),
+                    )
+                )
 
             # Gravity violation
             h = diff.shape[0]
-            upper_activity = float(np.mean(diff[:h // 3, :]))
-            lower_activity = float(np.mean(diff[2 * h // 3:, :]))
+            upper_activity = float(np.mean(diff[: h // 3, :]))
+            lower_activity = float(np.mean(diff[2 * h // 3 :, :]))
             if upper_activity > lower_activity * 2.0 and upper_activity > 20.0:
-                violations.append(Violation(
-                    violation_type="gravity_violation",
-                    frame_range=(i - 1, i),
-                    severity=min(1.0, upper_activity / 80.0),
-                    rationale=(
-                        f"Upward motion without applied force in frames {i - 1}-{i}."
-                    ),
-                ))
+                violations.append(
+                    Violation(
+                        violation_type="gravity_violation",
+                        frame_range=(i - 1, i),
+                        severity=min(1.0, upper_activity / 80.0),
+                        rationale=(f"Upward motion without applied force in frames {i - 1}-{i}."),
+                    )
+                )
 
             # Object permanence
             if max_diff > 200 and mean_diff < 10:
-                violations.append(Violation(
-                    violation_type="object_permanence",
-                    frame_range=(i - 1, i),
-                    severity=0.6,
-                    rationale=(
-                        f"Object appeared or disappeared instantaneously in frames {i - 1}-{i}."
-                    ),
-                ))
+                violations.append(
+                    Violation(
+                        violation_type="object_permanence",
+                        frame_range=(i - 1, i),
+                        severity=0.6,
+                        rationale=(f"Object appeared or disappeared instantaneously in frames {i - 1}-{i}."),
+                    )
+                )
 
         return violations
 
@@ -121,12 +123,14 @@ class AnomalyDetector:
             mean_diff = float(np.mean(diff))
 
             if mean_diff > self.diff_threshold:
-                violations.append(Violation(
-                    violation_type="trajectory_discontinuity",
-                    frame_range=(i - 1, i),
-                    severity=min(1.0, mean_diff / 100.0),
-                    rationale=f"Discontinuity detected between frames {i - 1}-{i}.",
-                ))
+                violations.append(
+                    Violation(
+                        violation_type="trajectory_discontinuity",
+                        frame_range=(i - 1, i),
+                        severity=min(1.0, mean_diff / 100.0),
+                        rationale=f"Discontinuity detected between frames {i - 1}-{i}.",
+                    )
+                )
 
         return violations
 

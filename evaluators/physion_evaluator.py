@@ -5,9 +5,10 @@ assessment, integrated with the PhysicsJudge.
 Provides a unified evaluate() interface returning EvaluatorResult,
 delegating to the PhysicsJudge for violation detection and scoring.
 """
+
 from typing import Dict, Optional
 
-from judge.physics_judge import PhysicsJudge, JudgmentResult
+from judge.physics_judge import JudgmentResult, PhysicsJudge
 from pipeline.unified_pipeline import EvaluatorResult
 
 

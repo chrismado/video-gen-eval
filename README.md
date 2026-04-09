@@ -87,6 +87,22 @@ High visual fidelity ≠ physical reliability. This is the fundamental finding.
 
 ---
 
+## Benchmark Snapshot
+
+`python -m benchmarks.model_comparison` is a report-aggregation CLI rather than a
+throughput benchmark. Running it three times against the bundled
+`benchmarks/results/example_results.json` file produced the same evaluation row each
+time, with a median CLI runtime of **51.2 ms**.
+
+| Model | EWMScore | VBench Avg | Physics | IVEBench Avg | TiViBench Avg | Violations |
+|-------|----------|------------|---------|--------------|---------------|------------|
+| example-model-v1 | 62.5 | 0.717 | 0.78 | 0.69 | 0.66 | 1 |
+
+Benchmarks measured on an AMD Ryzen 9 7950X with Python 3.12.2 on April 9, 2026.
+PyTorch is not used by this CLI path because it only summarizes precomputed report JSON.
+
+---
+
 ## Directory Structure
 
 ```

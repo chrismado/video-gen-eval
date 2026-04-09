@@ -4,15 +4,16 @@ Unit tests for the video-gen-eval evaluation framework.
 These tests exercise core logic without requiring a GPU, video files,
 or optional dependencies (vbench, ivebench, tivibench).
 """
+
 import json
 import unittest
 from pathlib import Path
 
-from evaluators.ewm_score import EWMScorer, MetricBounds, METRIC_BOUNDS, N_METRICS
-from judge.physics_judge import Violation, JudgmentResult, VIOLATION_TYPES
+from evaluators.ewm_score import METRIC_BOUNDS, N_METRICS, EWMScorer
+from judge.physics_judge import VIOLATION_TYPES, JudgmentResult, Violation
 from judge.rationale_generator import RationaleGenerator
-from pipeline.unified_pipeline import EvaluatorResult, PipelineReport
 from pipeline.score_aggregator import ScoreAggregator
+from pipeline.unified_pipeline import EvaluatorResult, PipelineReport
 
 
 class TestEWMScorer(unittest.TestCase):

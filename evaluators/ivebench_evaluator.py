@@ -5,6 +5,7 @@ video evaluation benchmark.
 Measures how well a generated video follows the text instruction that
 prompted it (compositional accuracy, attribute binding, action fidelity).
 """
+
 from typing import Any, Dict, Optional
 
 from pipeline.unified_pipeline import EvaluatorResult
