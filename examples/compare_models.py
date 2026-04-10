@@ -56,9 +56,7 @@ def main() -> None:
         violations = report.physics_judgment["violation_count"] if report.physics_judgment else 0
         physics = report.raw_scores.get("physics_compliance", 0.0)
         ewm = report.ewm_score if report.ewm_score is not None else 0.0
-        print(
-            f"| {Path(report.video_path).stem} | {ewm:>8.2f} | {physics:>13.4f} | {violations:>10} |"
-        )
+        print(f"| {Path(report.video_path).stem} | {ewm:>8.2f} | {physics:>13.4f} | {violations:>10} |")
 
     print("\nAggregate summary:")
     print(summary)

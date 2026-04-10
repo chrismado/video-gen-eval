@@ -70,7 +70,7 @@ class AnomalyDetector:
                         frame_range=(i - 1, i),
                         severity=min(1.0, mean_diff / 100.0),
                         rationale=(
-                            f"Abrupt spatial discontinuity between frames {i - 1}-{i} " f"(mean delta={mean_diff:.1f})."
+                            f"Abrupt spatial discontinuity between frames {i - 1}-{i} (mean delta={mean_diff:.1f})."
                         ),
                     )
                 )
