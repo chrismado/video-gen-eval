@@ -289,7 +289,7 @@ class PhysicsJudge:
             return None
 
         try:
-            import requests
+            import requests  # type: ignore[import-untyped]
 
             # Save frames as temporary images
             with tempfile.TemporaryDirectory() as tmpdir:

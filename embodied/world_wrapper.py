@@ -7,12 +7,12 @@ Usage:
     python -m embodied.world_wrapper
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import gymnasium as gym
 import numpy as np
 
-from embodied.rl_action_api import WorldModelEnv
+from embodied.rl_action_api import ActionArray, FrameArray, ModelCallable, WorldModelEnv
 
 
 class WorldModelWrapper(gym.Wrapper):
@@ -24,11 +24,11 @@ class WorldModelWrapper(gym.Wrapper):
 
     def __init__(
         self,
-        model,
-        resolution: Tuple[int, int] = (480, 832),
+        model: ModelCallable,
+        resolution: tuple[int, int] = (480, 832),
         max_steps: int = 300,
         record_frames: bool = False,
-    ):
+    ) -> None:
         """
         Args:
             model: Callable world model with signature
@@ -40,12 +40,17 @@ class WorldModelWrapper(gym.Wrapper):
         env = WorldModelEnv(model=model, resolution=resolution, max_steps=max_steps)
         super().__init__(env)
         self.record_frames = record_frames
-        self._episode_rewards: List[float] = []
-        self._episode_diffs: List[float] = []
-        self._recorded_frames: List[np.ndarray] = []
+        self._episode_rewards: list[float] = []
+        self._episode_diffs: list[float] = []
+        self._recorded_frames: list[FrameArray] = []
         self._episode_count: int = 0
 
-    def reset(self, *, seed: Optional[int] = None, options: Optional[Dict] = None) -> Tuple[np.ndarray, Dict]:
+    def reset(
+        self,
+        *,
+        seed: Optional[int] = None,
+        options: Optional[dict[str, Any]] = None,
+    ) -> tuple[FrameArray, dict[str, Any]]:
         """Reset the environment and clear episode accumulators."""
         obs, info = self.env.reset(seed=seed, options=options)
         self._episode_rewards = []
@@ -55,11 +60,12 @@ class WorldModelWrapper(gym.Wrapper):
             self._recorded_frames.append(obs.copy())
         return obs, info
 
-    def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, bool, Dict]:
+    def step(self, action: ActionArray) -> tuple[FrameArray, float, bool, bool, dict[str, Any]]:
         """Step the environment and record metrics."""
         obs, reward, terminated, truncated, info = self.env.step(action)
-        self._episode_rewards.append(reward)
-        self._episode_diffs.append(info.get("frame_diff_mean", 0.0))
+        reward_value = float(reward)
+        self._episode_rewards.append(reward_value)
+        self._episode_diffs.append(float(info.get("frame_diff_mean", 0.0)))
         if self.record_frames:
             self._recorded_frames.append(obs.copy())
 
@@ -67,9 +73,9 @@ class WorldModelWrapper(gym.Wrapper):
             self._episode_count += 1
             info["episode_stats"] = self.get_episode_stats()
 
-        return obs, reward, terminated, truncated, info
+        return obs, reward_value, terminated, truncated, info
 
-    def get_episode_stats(self) -> Dict[str, Any]:
+    def get_episode_stats(self) -> dict[str, Any]:
         """Return summary statistics for the current episode."""
         rewards = np.array(self._episode_rewards) if self._episode_rewards else np.array([0.0])
         diffs = np.array(self._episode_diffs) if self._episode_diffs else np.array([0.0])
@@ -82,7 +88,7 @@ class WorldModelWrapper(gym.Wrapper):
             "steps": len(self._episode_rewards),
         }
 
-    def get_recorded_frames(self) -> List[np.ndarray]:
+    def get_recorded_frames(self) -> list[FrameArray]:
         """Return frames recorded during the episode."""
         return list(self._recorded_frames)
 

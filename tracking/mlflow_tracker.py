@@ -60,6 +60,7 @@ class MLflowTracker:
             return None
 
         mlflow = self._mlflow
+        assert mlflow is not None
         with mlflow.start_run(run_name=run_name) as run:
             # Log EWMScore
             if report.ewm_score is not None:
@@ -97,5 +98,6 @@ class MLflowTracker:
             return
 
         mlflow = self._mlflow
+        assert mlflow is not None
         for key, val in metrics.items():
             mlflow.log_metric(key, val, step=step)
