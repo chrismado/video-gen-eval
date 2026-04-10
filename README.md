@@ -8,6 +8,24 @@ A unified evaluation pipeline that transitions video model benchmarking from ope
 
 ---
 
+## Portfolio Context
+
+This repo is part of [Creative AI Workflows](https://github.com/chrismado/creative-ai-workflows), a portfolio showcase connecting generative video, 3D scene review, creative QA, and enterprise deployment.
+
+In that system, `video-gen-eval` is the **creative QA layer**. It helps a team compare generated clips, explain why an output failed review, and turn subjective model critique into a repeatable iteration loop.
+
+### Customer-Facing Use Case
+
+An enterprise creative team needs to decide which generated video is ready for a campaign, previs review, pitch deck, or internal content workflow. This repo frames evaluation as a practical review assistant: it checks instruction fit, motion consistency, physical plausibility, and failure rationale so the next creative iteration is more targeted than trial-and-error prompting.
+
+### Demo Narrative
+
+- Start with three generated clips from the same creative brief.
+- Show that the most visually polished clip can still fail physics, continuity, or instruction fit.
+- Use the scorecard and rationale to explain which clip should move forward and what to change next.
+
+---
+
 ## The Problem
 
 **83.3% of exocentric and 93.5% of egocentric AI-generated videos exhibit at least one human-identifiable physical glitch** (Physion-Eval, 2026).
