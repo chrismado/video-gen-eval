@@ -10,7 +10,7 @@ A unified evaluation pipeline that transitions video model benchmarking from ope
 
 ## Portfolio Context
 
-This repo is part of [Creative AI Workflows](https://github.com/chrismado/creative-ai-workflows), a portfolio showcase connecting generative video, 3D scene review, creative QA, and enterprise deployment.
+This repo is part of [Creative AI Workflows](https://chrismado.github.io/creative-ai-workflows/) ([source](https://github.com/chrismado/creative-ai-workflows)), a portfolio showcase connecting generative video, 3D scene review, creative QA, and enterprise deployment.
 
 In that system, `video-gen-eval` is the **creative QA layer**. It helps a team compare generated clips, explain why an output failed review, and turn subjective model critique into a repeatable iteration loop.
 
