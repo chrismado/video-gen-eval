@@ -83,7 +83,7 @@ class WorldModelEnv(gym.Env):
                 frame = blank
 
         self._current_frame = frame
-        self._prev_frame = None
+        self._prev_frame = np.zeros((*self.resolution, 3), dtype=np.uint8)
         self._step_count = 0
         self._episode_frames = [frame.copy()]
 
