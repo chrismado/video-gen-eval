@@ -135,9 +135,7 @@ class WorldModelEnv(gym.Env[FrameArray, ActionArray]):
         info: StepInfo = {
             "step": self._step_count,
             "reward": reward,
-            "frame_diff_mean": float(
-                np.mean(np.abs(next_frame.astype(np.float32) - prev_frame.astype(np.float32)))
-            ),
+            "frame_diff_mean": float(np.mean(np.abs(next_frame.astype(np.float32) - prev_frame.astype(np.float32)))),
         }
 
         return next_frame, reward, terminated, truncated, info
