@@ -156,7 +156,7 @@ cd video-gen-eval
 pip install -r requirements.txt
 
 # Evaluate a single video
-python -m pipeline.unified_pipeline --video path/to/video.mp4 --all-dimensions
+python -m pipeline.unified_pipeline --video path/to/video.mp4
 
 # Full benchmark run
 python -m benchmarks.model_comparison --models runway-gen4 pika luma

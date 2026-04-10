@@ -10,13 +10,21 @@ instead of scoring finished videos, we score models
 under continuous interactive pressure.
 """
 
-from typing import Dict, Optional, Tuple
+from typing import Any, Callable, Optional, cast
 
 import gymnasium as gym
 import numpy as np
+import numpy.typing as npt
+from gymnasium.core import RenderFrame
+
+FrameArray = npt.NDArray[np.uint8]
+ActionArray = npt.NDArray[np.float32]
+ModelCallable = Callable[[FrameArray, ActionArray], FrameArray]
+ResetInfo = dict[str, int]
+StepInfo = dict[str, int | float]
 
 
-class WorldModelEnv(gym.Env):
+class WorldModelEnv(gym.Env[FrameArray, ActionArray]):
     """
     Generative video model wrapped as RL environment.
     Compatible with WorldArena EWMScore protocol (CVPR 2026).
@@ -28,7 +36,7 @@ class WorldModelEnv(gym.Env):
 
     metadata = {"render_modes": ["rgb_array"]}
 
-    def __init__(self, model, resolution: Tuple[int, int] = (480, 832), max_steps: int = 300):
+    def __init__(self, model: ModelCallable, resolution: tuple[int, int] = (480, 832), max_steps: int = 300) -> None:
         super().__init__()
         self.model = model
         self.resolution = resolution
@@ -48,16 +56,21 @@ class WorldModelEnv(gym.Env):
             dtype=np.float32,
         )
 
-        self._current_frame: Optional[np.ndarray] = None
-        self._prev_frame: Optional[np.ndarray] = None
+        self._current_frame: Optional[FrameArray] = None
+        self._prev_frame: Optional[FrameArray] = None
         self._step_count: int = 0
-        self._episode_frames: list = []
+        self._episode_frames: list[FrameArray] = []
 
     # ------------------------------------------------------------------
     # Gym interface
     # ------------------------------------------------------------------
 
-    def reset(self, *, seed: Optional[int] = None, options: Optional[Dict] = None) -> Tuple[np.ndarray, Dict]:
+    def reset(
+        self,
+        *,
+        seed: Optional[int] = None,
+        options: Optional[dict[str, Any]] = None,
+    ) -> tuple[FrameArray, ResetInfo]:
         """Initialize episode with a starting frame.
 
         If `options["initial_frame"]` is provided, use it directly.
@@ -67,29 +80,29 @@ class WorldModelEnv(gym.Env):
         super().reset(seed=seed)
 
         if options and "initial_frame" in options:
-            frame = np.asarray(options["initial_frame"], dtype=np.uint8)
+            frame = cast(FrameArray, np.asarray(options["initial_frame"], dtype=np.uint8))
             if frame.shape[:2] != self.resolution:
                 # Resize to expected resolution via simple nearest-neighbor
                 import cv2
 
-                frame = cv2.resize(frame, (self.resolution[1], self.resolution[0]))
+                frame = cast(FrameArray, cv2.resize(frame, (self.resolution[1], self.resolution[0])))
         else:
             # Ask the model for an initial frame with a null action
-            null_action = np.zeros(self.action_space.shape, dtype=np.float32)
-            blank = np.zeros((*self.resolution, 3), dtype=np.uint8)
+            null_action = cast(ActionArray, np.zeros((6,), dtype=np.float32))
+            blank = cast(FrameArray, np.zeros((*self.resolution, 3), dtype=np.uint8))
             try:
-                frame = np.asarray(self.model(blank, null_action), dtype=np.uint8)
+                frame = cast(FrameArray, np.asarray(self.model(blank, null_action), dtype=np.uint8))
             except Exception:
                 frame = blank
 
         self._current_frame = frame
-        self._prev_frame = np.zeros((*self.resolution, 3), dtype=np.uint8)
+        self._prev_frame = cast(FrameArray, np.zeros((*self.resolution, 3), dtype=np.uint8))
         self._step_count = 0
         self._episode_frames = [frame.copy()]
 
         return frame, {"step": 0}
 
-    def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, bool, Dict]:
+    def step(self, action: ActionArray) -> tuple[FrameArray, float, bool, bool, StepInfo]:
         """Apply action vector to world model, generate next frame.
 
         Returns:
@@ -99,15 +112,19 @@ class WorldModelEnv(gym.Env):
             truncated: always False (no external truncation)
             info: dict with per-step diagnostics
         """
-        action = np.asarray(action, dtype=np.float32)
+        action = cast(ActionArray, np.asarray(action, dtype=np.float32))
+        current_frame = self._current_frame
+        prev_frame = self._prev_frame
+        assert current_frame is not None
+        assert prev_frame is not None
 
         # Generate next frame through the world model
-        next_frame = np.asarray(self.model(self._current_frame, action), dtype=np.uint8)
+        next_frame = cast(FrameArray, np.asarray(self.model(current_frame, action), dtype=np.uint8))
 
         # Compute physics-based reward
-        reward = self.compute_physics_reward(self._current_frame, next_frame, action)
+        reward = self.compute_physics_reward(current_frame, next_frame, action)
 
-        self._prev_frame = self._current_frame
+        self._prev_frame = current_frame
         self._current_frame = next_frame
         self._step_count += 1
         self._episode_frames.append(next_frame.copy())
@@ -115,11 +132,11 @@ class WorldModelEnv(gym.Env):
         terminated = self._step_count >= self.max_steps
         truncated = False
 
-        info = {
+        info: StepInfo = {
             "step": self._step_count,
             "reward": reward,
             "frame_diff_mean": float(
-                np.mean(np.abs(next_frame.astype(np.float32) - self._prev_frame.astype(np.float32)))
+                np.mean(np.abs(next_frame.astype(np.float32) - prev_frame.astype(np.float32)))
             ),
         }
 
@@ -131,9 +148,9 @@ class WorldModelEnv(gym.Env):
 
     def compute_physics_reward(
         self,
-        prev_frame: np.ndarray,
-        curr_frame: np.ndarray,
-        action: np.ndarray,
+        prev_frame: FrameArray,
+        curr_frame: FrameArray,
+        action: ActionArray,
     ) -> float:
         """Reward based on physical plausibility of a state transition.
 
@@ -193,12 +210,12 @@ class WorldModelEnv(gym.Env):
     # Utilities
     # ------------------------------------------------------------------
 
-    def render(self) -> np.ndarray:
+    def render(self) -> RenderFrame | list[RenderFrame] | None:
         """Return the current frame for visualization."""
         if self._current_frame is None:
-            return np.zeros((*self.resolution, 3), dtype=np.uint8)
-        return self._current_frame
+            return cast(RenderFrame, np.zeros((*self.resolution, 3), dtype=np.uint8))
+        return cast(RenderFrame, self._current_frame)
 
-    def get_episode_frames(self) -> list:
+    def get_episode_frames(self) -> list[FrameArray]:
         """Return all frames collected in the current episode."""
         return list(self._episode_frames)

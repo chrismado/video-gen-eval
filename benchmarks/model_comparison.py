@@ -13,7 +13,7 @@ Usage:
 import argparse
 import json
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Optional
 
 # Column definitions for the results table
 COLUMNS = [
@@ -27,15 +27,19 @@ COLUMNS = [
 ]
 
 
-def load_results_from_dir(results_dir: str) -> List[Dict]:
+ResultDict = dict[str, Any]
+RowDict = dict[str, str | int | float | None]
+
+
+def load_results_from_dir(results_dir: str) -> list[ResultDict]:
     """Load all .json result files from a directory."""
-    results = []
+    results: list[ResultDict] = []
     rdir = Path(results_dir)
     if not rdir.is_dir():
         return results
     for p in sorted(rdir.glob("*.json")):
         try:
-            with open(p) as f:
+            with open(p, encoding="utf-8") as f:
                 data = json.load(f)
             results.append(data)
         except (json.JSONDecodeError, OSError):
@@ -43,7 +47,7 @@ def load_results_from_dir(results_dir: str) -> List[Dict]:
     return results
 
 
-def extract_row(result: Dict) -> Dict:
+def extract_row(result: ResultDict) -> RowDict:
     """Extract display values from a pipeline report dict."""
     raw = result.get("raw_scores", {})
     physics = result.get("physics_judgment", {})
@@ -61,7 +65,7 @@ def extract_row(result: Dict) -> Dict:
     }
 
 
-def _avg_vbench(result: Dict) -> Optional[float]:
+def _avg_vbench(result: ResultDict) -> Optional[float]:
     """Average VBench dimension scores from the evaluator results."""
     for er in result.get("evaluators", []):
         if er.get("name") == "vbench" and er.get("scores"):
@@ -70,7 +74,7 @@ def _avg_vbench(result: Dict) -> Optional[float]:
     return None
 
 
-def _avg_evaluator(result: Dict, name: str) -> Optional[float]:
+def _avg_evaluator(result: ResultDict, name: str) -> Optional[float]:
     """Average scores from a named evaluator."""
     for er in result.get("evaluators", []):
         if er.get("name") == name and er.get("scores"):
@@ -79,7 +83,7 @@ def _avg_evaluator(result: Dict, name: str) -> Optional[float]:
     return None
 
 
-def fmt_val(val, precision: int = 1) -> str:
+def fmt_val(val: object, precision: int = 1) -> str:
     """Format a numeric value or return '-' if unavailable."""
     if val is None:
         return "-"
@@ -88,7 +92,7 @@ def fmt_val(val, precision: int = 1) -> str:
     return str(val)
 
 
-def print_table(rows: List[Dict]) -> None:
+def print_table(rows: list[RowDict]) -> None:
     """Print a formatted results table to stdout."""
     # Header
     header_parts = []
@@ -105,7 +109,7 @@ def print_table(rows: List[Dict]) -> None:
 
     if not rows:
         print("  No results available. Run evaluations first:")
-        print("    python -m pipeline.unified_pipeline --video <path> --all-dimensions")
+        print("    python -m pipeline.unified_pipeline --video <path>")
         print("  Then place the .report.json files in benchmarks/results/")
         print(sep)
         print()
@@ -134,7 +138,7 @@ def print_table(rows: List[Dict]) -> None:
     print()
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Print multi-model benchmark results")
     parser.add_argument(
         "--results-dir",
@@ -143,7 +147,7 @@ def main():
     )
     args = parser.parse_args()
 
-    results = load_results_from_dir(args.results_dir)
+    results: list[ResultDict] = load_results_from_dir(args.results_dir)
     rows = [extract_row(r) for r in results]
     print_table(rows)
 

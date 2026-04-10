@@ -56,6 +56,7 @@ class WandbTracker:
             return False
 
         wandb = self._wandb
+        assert wandb is not None
         self._run = wandb.init(
             project=self.project,
             entity=self.entity,
@@ -84,6 +85,7 @@ class WandbTracker:
             return False
 
         wandb = self._wandb
+        assert wandb is not None
 
         if self._run is None:
             self.init_run(run_name=run_name, config={"video_path": report.video_path})
@@ -111,7 +113,9 @@ class WandbTracker:
         if not self.available or self._run is None:
             return
 
-        self._wandb.log(metrics)
+        wandb = self._wandb
+        assert wandb is not None
+        wandb.log(metrics)
 
     def finish(self) -> None:
         """Finish the active wandb run."""

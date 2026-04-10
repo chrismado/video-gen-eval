@@ -5,10 +5,11 @@ Runs a series of episodes with a given policy and world model, collecting
 per-episode statistics and computing aggregate task success metrics.
 """
 
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Optional
 
 import numpy as np
 
+from embodied.rl_action_api import ActionArray, FrameArray, ModelCallable
 from embodied.world_wrapper import WorldModelWrapper
 
 
@@ -21,11 +22,11 @@ class TaskEvaluator:
 
     def __init__(
         self,
-        model,
-        resolution: Tuple[int, int] = (480, 832),
+        model: ModelCallable,
+        resolution: tuple[int, int] = (480, 832),
         max_steps: int = 300,
         n_episodes: int = 5,
-    ):
+    ) -> None:
         """
         Args:
             model: Callable world model for WorldModelWrapper.
@@ -40,9 +41,9 @@ class TaskEvaluator:
 
     def evaluate(
         self,
-        policy: Optional[Callable[[np.ndarray], np.ndarray]] = None,
+        policy: Optional[Callable[[FrameArray], ActionArray]] = None,
         success_threshold: float = 0.0,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Run evaluation episodes and return aggregate metrics.
 
         Args:
@@ -61,7 +62,7 @@ class TaskEvaluator:
             max_steps=self.max_steps,
         )
 
-        episode_results: List[Dict[str, Any]] = []
+        episode_results: list[dict[str, Any]] = []
 
         for ep in range(self.n_episodes):
             obs, _ = wrapper.reset(seed=ep)
@@ -70,7 +71,7 @@ class TaskEvaluator:
                 if policy is not None:
                     action = policy(obs)
                 else:
-                    action = wrapper.action_space.sample()
+                    action = np.asarray(wrapper.action_space.sample(), dtype=np.float32)
                 obs, reward, terminated, truncated, info = wrapper.step(action)
                 done = terminated or truncated
 
@@ -82,9 +83,9 @@ class TaskEvaluator:
 
     def _aggregate(
         self,
-        episode_results: List[Dict[str, Any]],
+        episode_results: list[dict[str, Any]],
         success_threshold: float,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Compute aggregate metrics from per-episode results."""
         total_rewards = [ep["total_reward"] for ep in episode_results]
         mean_rewards = [ep["mean_reward"] for ep in episode_results]

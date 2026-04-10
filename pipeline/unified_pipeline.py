@@ -6,7 +6,7 @@ plus the EWMScore closed-loop assessment, consolidating results into
 a single structured report.
 
 Usage:
-    python -m pipeline.unified_pipeline --video path/to/video.mp4 --all-dimensions
+    python -m pipeline.unified_pipeline --video path/to/video.mp4
 """
 
 import argparse
@@ -215,7 +215,6 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Unified Physion-Judge evaluation pipeline")
     parser.add_argument("--video", required=True, help="Path to video file")
     parser.add_argument("--output", default=None, help="Output JSON path (default: <video>.report.json)")
-    parser.add_argument("--all-dimensions", action="store_true", help="Enable all evaluators")
     parser.add_argument("--no-vbench", action="store_true")
     parser.add_argument("--no-ivebench", action="store_true")
     parser.add_argument("--no-tivibench", action="store_true")
