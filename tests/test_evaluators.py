@@ -13,7 +13,7 @@ from evaluators.ewm_score import METRIC_BOUNDS, N_METRICS, EWMScorer
 from judge.physics_judge import VIOLATION_TYPES, JudgmentResult, Violation
 from judge.rationale_generator import RationaleGenerator
 from pipeline.score_aggregator import ScoreAggregator
-from pipeline.unified_pipeline import EvaluatorResult, PipelineReport
+from pipeline.unified_pipeline import EvaluatorResult, PipelineReport, UnifiedPipeline
 
 
 class TestEWMScorer(unittest.TestCase):
@@ -167,6 +167,32 @@ class TestPipelineReport(unittest.TestCase):
         d = report.to_dict()
         self.assertEqual(d["video_path"], "test.mp4")
         self.assertEqual(d["ewm_score"], 72.5)
+
+
+class TestUnifiedPipeline(unittest.TestCase):
+    """Tests for the unified pipeline orchestration layer."""
+
+    def test_physion_errors_are_reported_without_crashing(self):
+        class BrokenJudge:
+            def judge(self, video_path: str):
+                raise RuntimeError(f"decode failed for {video_path}")
+
+        pipeline = UnifiedPipeline(
+            enable_vbench=False,
+            enable_ivebench=False,
+            enable_tivibench=False,
+            enable_physion=True,
+        )
+        pipeline.physics_judge = BrokenJudge()
+
+        report = pipeline.run("broken.mp4")
+
+        self.assertIsNone(report.physics_judgment)
+        self.assertEqual(len(report.evaluator_results), 1)
+        self.assertEqual(report.evaluator_results[0].name, "physion")
+        self.assertIn("decode failed for broken.mp4", report.evaluator_results[0].error)
+        self.assertEqual(report.raw_scores, {})
+        self.assertIsNone(report.ewm_score)
 
 
 class TestScoreAggregator(unittest.TestCase):

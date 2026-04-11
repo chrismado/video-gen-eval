@@ -115,14 +115,24 @@ class UnifiedPipeline:
         # 4. Physion-Eval (physics judge)
         if self.enable_physion:
             assert self.physics_judge is not None
-            judgment = self.physics_judge.judge(video_path)
-            report.physics_judgment = judgment.to_dict()
-            report.evaluator_results.append(
-                EvaluatorResult(
-                    name="physion",
-                    scores={"physics_compliance": judgment.overall_physics_score},
+            try:
+                judgment = self.physics_judge.judge(video_path)
+            except Exception as exc:
+                report.evaluator_results.append(
+                    EvaluatorResult(
+                        name="physion",
+                        error=str(exc),
+                        metadata={"error_type": type(exc).__name__},
+                    )
                 )
-            )
+            else:
+                report.physics_judgment = judgment.to_dict()
+                report.evaluator_results.append(
+                    EvaluatorResult(
+                        name="physion",
+                        scores={"physics_compliance": judgment.overall_physics_score},
+                    )
+                )
 
         # 5. Aggregate raw scores from all evaluators into a single dict
         for er in report.evaluator_results:

@@ -9,10 +9,9 @@ for each detected anomaly.
 
 from typing import List
 
-import cv2
 import numpy as np
 
-from judge.physics_judge import Violation
+from judge.physics_judge import Violation, _require_cv2
 
 
 class AnomalyDetector:
@@ -48,6 +47,7 @@ class AnomalyDetector:
         Returns:
             List of Violation objects, one per detected anomaly window.
         """
+        cv2 = _require_cv2()
         frames = self._load_frames(video_path)
         if len(frames) < 2:
             return []
@@ -111,6 +111,7 @@ class AnomalyDetector:
         Returns:
             List of Violation objects.
         """
+        cv2 = _require_cv2()
         if len(frames) < 2:
             return []
 
@@ -136,6 +137,7 @@ class AnomalyDetector:
 
     def _load_frames(self, video_path: str) -> List[np.ndarray]:
         """Load video frames at the configured sample FPS."""
+        cv2 = _require_cv2()
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             return []
