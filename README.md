@@ -176,12 +176,26 @@ pip install -r requirements.txt
 # Evaluate a single video with local physics heuristics only
 python -m pipeline.unified_pipeline --video path/to/video.mp4 --no-vbench --no-ivebench --no-tivibench
 
+# Merge precomputed official benchmark outputs into the unified report
+python -m pipeline.unified_pipeline \
+  --video path/to/video.mp4 \
+  --no-physion \
+  --vbench-report benchmarks/external_reports/vbench_example.json \
+  --ivebench-report benchmarks/external_reports/ivebench_example.json \
+  --tivibench-report benchmarks/external_reports/tivibench_example.json
+
 # Summarize bundled report JSON
 python -m benchmarks.model_comparison
 
 # Filter report rows by model name
 python -m benchmarks.model_comparison --models example-model-v1
 ```
+
+The `--*-report` flags provide a concrete handoff path from official benchmark
+runner outputs to this repo's unified scorecard. That makes the adapter story
+more than an interface stub: you can run the upstream benchmark in its native
+environment, export JSON, then merge those results here with local physics and
+EWM-style scoring.
 
 ---
 

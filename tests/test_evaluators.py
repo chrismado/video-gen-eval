@@ -8,6 +8,7 @@ or optional dependencies (vbench, ivebench, tivibench).
 import json
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from evaluators.ewm_score import METRIC_BOUNDS, N_METRICS, EWMScorer
 from judge.physics_judge import VIOLATION_TYPES, JudgmentResult, Violation
@@ -193,6 +194,36 @@ class TestUnifiedPipeline(unittest.TestCase):
         self.assertIn("decode failed for broken.mp4", report.evaluator_results[0].error)
         self.assertEqual(report.raw_scores, {})
         self.assertIsNone(report.ewm_score)
+
+    def test_vbench_report_json_is_consumed_via_file_adapter(self):
+        with TemporaryDirectory() as tmpdir:
+            report_path = Path(tmpdir) / "vbench.json"
+            report_path.write_text(
+                json.dumps(
+                    [
+                        {"dimension": "Motion smoothness", "score": 0.91},
+                        {"dimension": "Aesthetic quality", "score": 0.76},
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            pipeline = UnifiedPipeline(
+                enable_vbench=True,
+                enable_ivebench=False,
+                enable_tivibench=False,
+                enable_physion=False,
+                vbench_report=str(report_path),
+            )
+
+            report = pipeline.run("clip.mp4")
+
+        self.assertEqual(report.evaluator_results[0].name, "vbench")
+        self.assertEqual(report.evaluator_results[0].metadata["report_source"], "json_file")
+        self.assertEqual(report.evaluator_results[0].metadata["report_path"], str(report_path))
+        self.assertAlmostEqual(report.raw_scores["motion_smoothness"], 0.91)
+        self.assertAlmostEqual(report.raw_scores["aesthetic_quality"], 0.76)
+        self.assertIsNotNone(report.ewm_score)
 
 
 class TestScoreAggregator(unittest.TestCase):

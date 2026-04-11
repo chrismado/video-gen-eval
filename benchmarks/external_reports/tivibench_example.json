@@ -1,0 +1,5 @@
+{
+  "causal_reasoning": 0.72,
+  "temporal_ordering": 0.78,
+  "event_consistency": 0.75
+}

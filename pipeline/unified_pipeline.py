@@ -73,11 +73,17 @@ class UnifiedPipeline:
         enable_physion: bool = True,
         mllm_model: str = "qwen2.5-vl",
         mllm_endpoint: Optional[str] = None,
+        vbench_report: Optional[str] = None,
+        ivebench_report: Optional[str] = None,
+        tivibench_report: Optional[str] = None,
     ):
         self.enable_vbench = enable_vbench
         self.enable_ivebench = enable_ivebench
         self.enable_tivibench = enable_tivibench
         self.enable_physion = enable_physion
+        self.vbench_report = vbench_report
+        self.ivebench_report = ivebench_report
+        self.tivibench_report = tivibench_report
         self.ewm_scorer = EWMScorer()
         self.physics_judge: Any | None = None
         if enable_physion:
@@ -160,7 +166,20 @@ class UnifiedPipeline:
     # ------------------------------------------------------------------
 
     def _run_vbench(self, video_path: str) -> EvaluatorResult:
-        """Placeholder for a VBench adapter integration."""
+        """Run VBench via a JSON report adapter when provided."""
+        if self.vbench_report:
+            from evaluators.vbench_evaluator import VBenchEvaluator
+
+            evaluator = VBenchEvaluator(adapter=lambda _: self._load_report_json(self.vbench_report))
+            result = evaluator.evaluate(video_path)
+            result.metadata.update(
+                {
+                    "report_source": "json_file",
+                    "report_path": self.vbench_report,
+                }
+            )
+            return result
+
         _ = video_path
         return EvaluatorResult(
             name="vbench",
@@ -168,7 +187,20 @@ class UnifiedPipeline:
         )
 
     def _run_ivebench(self, video_path: str) -> EvaluatorResult:
-        """Placeholder for an IVEBench adapter integration."""
+        """Run IVEBench via a JSON report adapter when provided."""
+        if self.ivebench_report:
+            from evaluators.ivebench_evaluator import IVEBenchEvaluator
+
+            evaluator = IVEBenchEvaluator(adapter=lambda _: self._load_report_json(self.ivebench_report))
+            result = evaluator.evaluate(video_path)
+            result.metadata.update(
+                {
+                    "report_source": "json_file",
+                    "report_path": self.ivebench_report,
+                }
+            )
+            return result
+
         _ = video_path
         return EvaluatorResult(
             name="ivebench",
@@ -176,12 +208,31 @@ class UnifiedPipeline:
         )
 
     def _run_tivibench(self, video_path: str) -> EvaluatorResult:
-        """Placeholder for a TiViBench adapter integration."""
+        """Run TiViBench via a JSON report adapter when provided."""
+        if self.tivibench_report:
+            from evaluators.tivibench_evaluator import TiViBenchEvaluator
+
+            evaluator = TiViBenchEvaluator(adapter=lambda _: self._load_report_json(self.tivibench_report))
+            result = evaluator.evaluate(video_path)
+            result.metadata.update(
+                {
+                    "report_source": "json_file",
+                    "report_path": self.tivibench_report,
+                }
+            )
+            return result
+
         _ = video_path
         return EvaluatorResult(
             name="tivibench",
             error="external TiViBench adapter not configured; use --no-tivibench or wire an official runner",
         )
+
+    def _load_report_json(self, report_path: str) -> Any:
+        """Load a benchmark report JSON produced by an external runner."""
+        path = Path(report_path)
+        with open(path, "r", encoding="utf-8") as handle:
+            return json.load(handle)
 
 
 # ------------------------------------------------------------------
@@ -199,6 +250,9 @@ def main() -> None:
     parser.add_argument("--no-physion", action="store_true")
     parser.add_argument("--mllm-model", default="qwen2.5-vl")
     parser.add_argument("--mllm-endpoint", default=None)
+    parser.add_argument("--vbench-report", default=None, help="Path to official VBench JSON output")
+    parser.add_argument("--ivebench-report", default=None, help="Path to official IVEBench JSON output")
+    parser.add_argument("--tivibench-report", default=None, help="Path to official TiViBench JSON output")
     args = parser.parse_args()
 
     pipeline = UnifiedPipeline(
@@ -208,6 +262,9 @@ def main() -> None:
         enable_physion=not args.no_physion,
         mllm_model=args.mllm_model,
         mllm_endpoint=args.mllm_endpoint,
+        vbench_report=args.vbench_report,
+        ivebench_report=args.ivebench_report,
+        tivibench_report=args.tivibench_report,
     )
 
     report = pipeline.run(args.video)
