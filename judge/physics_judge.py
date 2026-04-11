@@ -15,9 +15,8 @@ Output is a structured list of violations, each with:
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-import cv2
 import numpy as np
 
 # Physion-Eval physical violation categories (subset of 22)
@@ -45,6 +44,23 @@ VIOLATION_TYPES = [
     "rope_chain_dynamics",
     "light_shadow_consistency",
 ]
+
+_cv2: Any | None = None
+
+
+def _require_cv2() -> Any:
+    """Import OpenCV only when video decoding is actually requested."""
+    global _cv2
+    if _cv2 is None:
+        try:
+            import cv2 as cv2_module
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "OpenCV is required for video-based physics judging. "
+                "Install the project dependencies or `opencv-python` to enable this path."
+            ) from exc
+        _cv2 = cv2_module
+    return _cv2
 
 
 @dataclass
@@ -148,6 +164,7 @@ class PhysicsJudge:
 
     def _load_frames(self, video_path: str) -> List[np.ndarray]:
         """Load video frames at the configured sample FPS."""
+        cv2 = _require_cv2()
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             return []
@@ -172,6 +189,7 @@ class PhysicsJudge:
         Uses frame differencing and optional optical flow to flag windows
         where physics may be violated.
         """
+        cv2 = _require_cv2()
         candidates = []
 
         for i in range(1, len(frames)):
@@ -289,6 +307,7 @@ class PhysicsJudge:
             return None
 
         try:
+            cv2 = _require_cv2()
             import requests  # type: ignore[import-untyped]
 
             # Save frames as temporary images

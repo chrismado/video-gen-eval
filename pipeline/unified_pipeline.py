@@ -1,9 +1,8 @@
 """
 UnifiedPipeline: Master evaluation orchestrator.
 
-Runs all four evaluators (VBench, IVEBench, TiViBench, Physion-Eval)
-plus the EWMScore closed-loop assessment, consolidating results into
-a single structured report.
+Runs local physics/EWM evaluation plus optional external benchmark adapters,
+consolidating results into a single structured report.
 
 Usage:
     python -m pipeline.unified_pipeline --video path/to/video.mp4
@@ -17,7 +16,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from evaluators.ewm_score import EWMScorer
-from judge.physics_judge import PhysicsJudge
 
 
 @dataclass
@@ -61,10 +59,10 @@ class PipelineReport:
 
 
 class UnifiedPipeline:
-    """Orchestrates VBench, IVEBench, TiViBench, Physion-Eval, and EWMScore.
+    """Orchestrates optional benchmark adapters, Physion-Eval, and EWMScore.
 
-    Each evaluator is optional. If the corresponding library is not installed
-    or the evaluator is not enabled, it is skipped gracefully.
+    VBench, IVEBench, and TiViBench are treated as adapter integration points
+    because their official runners may not expose stable importable classes.
     """
 
     def __init__(
@@ -81,10 +79,14 @@ class UnifiedPipeline:
         self.enable_tivibench = enable_tivibench
         self.enable_physion = enable_physion
         self.ewm_scorer = EWMScorer()
-        self.physics_judge = PhysicsJudge(
-            mllm_model=mllm_model,
-            mllm_endpoint=mllm_endpoint,
-        )
+        self.physics_judge: Any | None = None
+        if enable_physion:
+            from judge.physics_judge import PhysicsJudge
+
+            self.physics_judge = PhysicsJudge(
+                mllm_model=mllm_model,
+                mllm_endpoint=mllm_endpoint,
+            )
 
     # ------------------------------------------------------------------
     # Public API
@@ -112,6 +114,7 @@ class UnifiedPipeline:
 
         # 4. Physion-Eval (physics judge)
         if self.enable_physion:
+            assert self.physics_judge is not None
             judgment = self.physics_judge.judge(video_path)
             report.physics_judgment = judgment.to_dict()
             report.evaluator_results.append(
@@ -147,63 +150,28 @@ class UnifiedPipeline:
     # ------------------------------------------------------------------
 
     def _run_vbench(self, video_path: str) -> EvaluatorResult:
-        """Run VBench 16-dimension assessment."""
-        try:
-            from vbench import VBench
-
-            bench = VBench()
-            results = bench.evaluate(video_path)
-            scores = {}
-            if isinstance(results, list):
-                for entry in results:
-                    dim = entry.get("dimension", "")
-                    key = dim.lower().replace(" ", "_").replace("-", "_")
-                    scores[key] = float(entry.get("score", 0.0))
-            elif isinstance(results, dict):
-                for key, val in results.items():
-                    norm_key = key.lower().replace(" ", "_").replace("-", "_")
-                    scores[norm_key] = float(val) if isinstance(val, (int, float)) else 0.0
-            return EvaluatorResult(name="vbench", scores=scores)
-        except ImportError:
-            return EvaluatorResult(name="vbench", error="vbench not installed")
-        except Exception as e:
-            return EvaluatorResult(name="vbench", error=str(e))
+        """Placeholder for a VBench adapter integration."""
+        _ = video_path
+        return EvaluatorResult(
+            name="vbench",
+            error="external VBench adapter not configured; use --no-vbench or wire an official runner",
+        )
 
     def _run_ivebench(self, video_path: str) -> EvaluatorResult:
-        """Run IVEBench instruction compliance evaluation."""
-        try:
-            from ivebench import IVEBench
-
-            bench = IVEBench()
-            results = bench.evaluate(video_path)
-            scores = {}
-            if isinstance(results, dict):
-                for key, val in results.items():
-                    norm_key = key.lower().replace(" ", "_").replace("-", "_")
-                    scores[norm_key] = float(val) if isinstance(val, (int, float)) else 0.0
-            return EvaluatorResult(name="ivebench", scores=scores)
-        except ImportError:
-            return EvaluatorResult(name="ivebench", error="ivebench not installed")
-        except Exception as e:
-            return EvaluatorResult(name="ivebench", error=str(e))
+        """Placeholder for an IVEBench adapter integration."""
+        _ = video_path
+        return EvaluatorResult(
+            name="ivebench",
+            error="external IVEBench adapter not configured; use --no-ivebench or wire an official runner",
+        )
 
     def _run_tivibench(self, video_path: str) -> EvaluatorResult:
-        """Run TiViBench causal reasoning evaluation."""
-        try:
-            from tivibench import TiViBench
-
-            bench = TiViBench()
-            results = bench.evaluate(video_path)
-            scores = {}
-            if isinstance(results, dict):
-                for key, val in results.items():
-                    norm_key = key.lower().replace(" ", "_").replace("-", "_")
-                    scores[norm_key] = float(val) if isinstance(val, (int, float)) else 0.0
-            return EvaluatorResult(name="tivibench", scores=scores)
-        except ImportError:
-            return EvaluatorResult(name="tivibench", error="tivibench not installed")
-        except Exception as e:
-            return EvaluatorResult(name="tivibench", error=str(e))
+        """Placeholder for a TiViBench adapter integration."""
+        _ = video_path
+        return EvaluatorResult(
+            name="tivibench",
+            error="external TiViBench adapter not configured; use --no-tivibench or wire an official runner",
+        )
 
 
 # ------------------------------------------------------------------

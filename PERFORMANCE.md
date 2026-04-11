@@ -13,16 +13,17 @@ CPU-only JSON parsing and score computation.
 | Median CLI runtime | 51.2 ms |
 | Method | 3 consecutive runs against `benchmarks/results/example_results.json` |
 
-### Full Pipeline Throughput
+### Full Pipeline Throughput Roadmap
 
-When running the complete evaluation pipeline (VBench + IVEBench + TiViBench + Physion-Eval + EWMScore)
-against actual video files with MLLM judge inference:
+The local measured path is report aggregation only. End-to-end GPU throughput
+depends on which official benchmark adapters and MLLM judge backends are wired.
+Use the table below as a measurement plan rather than a published result:
 
 | Metric | Value |
 |--------|-------|
-| Batch size | 100 videos |
-| Wall time | < 12 minutes |
-| Hardware | NVIDIA RTX 4090 |
+| Batch size | TBD |
+| Wall time | TBD |
+| Hardware | Record per run |
 
 ## Environment
 
@@ -32,8 +33,8 @@ against actual video files with MLLM judge inference:
 
 ## Optimization Roadmap
 
-1. **Parallelize sub-evaluators** — VBench, IVEBench, TiViBench, and Physion-Eval can run concurrently on separate GPU streams.
-2. **Batch MLLM judge calls** — Current implementation evaluates one video at a time. Batching reduces per-video overhead.
-3. **Cache VBench dimension scores** — Deterministic dimensions can be cached across evaluation runs.
-4. **Stream Physion-Eval traces** — Avoid loading all 10,990 reasoning traces when evaluating a single category.
-5. **Add GPU utilization tracking** — Prometheus metrics for GPU memory and compute during batch runs.
+1. **Wire official benchmark adapters** - Keep VBench, IVEBench, and TiViBench integration code separate from the local scoring framework.
+2. **Parallelize sub-evaluators** - Run external adapters and local physics checks independently where dependencies allow.
+3. **Batch MLLM judge calls** - Current implementation evaluates one video at a time. Batching reduces per-video overhead.
+4. **Cache deterministic dimension scores** - Reuse scores across evaluation runs when the video and evaluator version match.
+5. **Add GPU utilization tracking** - Prometheus metrics for GPU memory and compute during batch runs.

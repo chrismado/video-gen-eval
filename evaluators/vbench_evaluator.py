@@ -1,11 +1,12 @@
 """
 VBenchEvaluator: Wrapper around the VBench 16-dimension video quality benchmark.
 
-Provides a unified evaluate() interface returning EvaluatorResult,
-consistent with the UnifiedPipeline contract.
+Provides a unified evaluate() interface returning EvaluatorResult.
+The official VBench runner is intentionally exposed as an adapter hook instead
+of importing an assumed public Python API.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from pipeline.unified_pipeline import EvaluatorResult
 
@@ -13,19 +14,21 @@ from pipeline.unified_pipeline import EvaluatorResult
 class VBenchEvaluator:
     """Evaluate a generated video across VBench's 16 perceptual dimensions.
 
-    Wraps the Vchitect/VBench library with graceful fallback when it is
-    not installed.
+    This class normalizes VBench-shaped outputs. It does not assume that an
+    installed package exposes a package-root VBench class; pass an adapter
+    callable when wiring an official runner.
     """
 
     name: str = "vbench"
 
-    def __init__(self, dimensions: Optional[List[str]] = None):
+    def __init__(self, dimensions: Optional[List[str]] = None, adapter: Optional[Callable[[str], Any]] = None):
         """
         Args:
             dimensions: Subset of VBench dimensions to evaluate.
                         If None, all 16 dimensions are used.
         """
         self.dimensions = dimensions
+        self.adapter = adapter
 
     def evaluate(self, video_path: str) -> EvaluatorResult:
         """Run VBench evaluation on a single video.
@@ -33,16 +36,14 @@ class VBenchEvaluator:
         Returns:
             EvaluatorResult with per-dimension scores in ``scores``.
         """
-        video_path = str(video_path)
+        if self.adapter is None:
+            return EvaluatorResult(
+                name=self.name,
+                error="external VBench adapter not configured; wire an official VBench runner before enabling",
+            )
         try:
-            from vbench import VBench
-
-            bench = VBench()
-            results = bench.evaluate(video_path)
-            scores = self._parse_results(results)
-            return EvaluatorResult(name=self.name, scores=scores)
-        except ImportError:
-            return EvaluatorResult(name=self.name, error="vbench not installed")
+            results = self.adapter(str(video_path))
+            return EvaluatorResult(name=self.name, scores=self._parse_results(results))
         except Exception as e:
             return EvaluatorResult(name=self.name, error=str(e))
 

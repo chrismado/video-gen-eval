@@ -4,9 +4,11 @@ video evaluation benchmark.
 
 Measures how well a generated video follows the text instruction that
 prompted it (compositional accuracy, attribute binding, action fidelity).
+The official benchmark runner is intentionally exposed as an adapter hook
+instead of importing an assumed public Python API.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 from pipeline.unified_pipeline import EvaluatorResult
 
@@ -14,13 +16,13 @@ from pipeline.unified_pipeline import EvaluatorResult
 class IVEBenchEvaluator:
     """Evaluate instruction-compliance of a generated video via IVEBench.
 
-    Wraps the IVEBench library with graceful fallback when it is
-    not installed.
+    This class normalizes IVEBench-shaped outputs. Pass an adapter callable when
+    wiring an official runner.
     """
 
     name: str = "ivebench"
 
-    def __init__(self, instruction: Optional[str] = None):
+    def __init__(self, instruction: Optional[str] = None, adapter: Optional[Callable[[str], Any]] = None):
         """
         Args:
             instruction: The text prompt / instruction the video was
@@ -28,6 +30,7 @@ class IVEBenchEvaluator:
                          compliance scoring.
         """
         self.instruction = instruction
+        self.adapter = adapter
 
     def evaluate(self, video_path: str) -> EvaluatorResult:
         """Run IVEBench evaluation on a single video.
@@ -35,19 +38,18 @@ class IVEBenchEvaluator:
         Returns:
             EvaluatorResult with instruction-compliance scores.
         """
-        video_path = str(video_path)
+        if self.adapter is None:
+            return EvaluatorResult(
+                name=self.name,
+                error="external IVEBench adapter not configured; wire an official IVEBench runner before enabling",
+            )
         try:
-            from ivebench import IVEBench
-
-            bench = IVEBench()
-            results = bench.evaluate(video_path)
+            results = self.adapter(str(video_path))
             scores = self._parse_results(results)
             metadata: Dict[str, Any] = {}
             if self.instruction:
                 metadata["instruction"] = self.instruction
             return EvaluatorResult(name=self.name, scores=scores, metadata=metadata)
-        except ImportError:
-            return EvaluatorResult(name=self.name, error="ivebench not installed")
         except Exception as e:
             return EvaluatorResult(name=self.name, error=str(e))
 

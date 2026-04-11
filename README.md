@@ -2,9 +2,9 @@
 
 **Physion-Judge: Closed-Loop Embodied Evaluation of Generative Video Models**
 
-A unified evaluation pipeline that transitions video model benchmarking from open-loop visual observation to closed-loop physical diagnosis. Implements the Embodied World Model Score (EWMScore) based on the WorldArena framework, combining VBench, IVEBench, TiViBench, and Physion-Eval into a single "Physics-as-a-Judge" pipeline.
+An evaluation prototype that explores how video model benchmarking can move from open-loop visual observation toward closed-loop physical diagnosis. It includes EWMScore-style normalized aggregation, local physics heuristics, and explicit adapter hooks for VBench, IVEBench, TiViBench, and Physion-Eval style evaluation.
 
-*Technical report submitted to CVPR 2026 VGBE Workshop (1st Workshop on Video Generative Models: Benchmarks and Evaluation), April 2026.*
+*Portfolio technical report draft targeting video generation benchmark and evaluation discussions, April 2026.*
 
 ---
 
@@ -30,7 +30,7 @@ An enterprise creative team needs to decide which generated video is ready for a
 
 **83.3% of exocentric and 93.5% of egocentric AI-generated videos exhibit at least one human-identifiable physical glitch** (Physion-Eval, 2026).
 
-Current evaluation frameworks miss this entirely. VBench scores a video on aesthetic quality. IVEBench scores instruction compliance. Neither tells you whether the physics is broken — and broken physics causes catastrophic failure when a model is used as a world simulator for embodied AI or robotics.
+Current evaluation frameworks can miss this failure mode. Aesthetic, instruction, and temporal scores are useful, but creative teams also need a way to reason about whether motion and physical behavior break the scene.
 
 The deeper problem: open-loop evaluation generates a video from a static prompt and scores the result in isolation. This is fundamentally inadequate for world models intended for interactive, closed-loop deployment.
 
@@ -96,12 +96,12 @@ High visual fidelity ≠ physical reliability. This is the fundamental finding.
 
 ## Stack
 
-- **Evaluation engines:** VBench++ (IEEE 2026), IVEBench (ICLR 2026), TiViBench (CVPR 2026)
-- **Physical verification:** Physion-Eval (Stanford/Hong-Xing Yu et al.)
-- **Embodied evaluation:** WorldArena EWMScore (CVPR 2026)
-- **MLLM judges:** Qwen2.5-VL, LLaVA (configurable)
+- **Adapter targets:** VBench-style, IVEBench-style, TiViBench-style, and Physion-Eval-style outputs
+- **Physical verification:** local physics heuristics and violation labels
+- **Embodied evaluation:** EWMScore-style normalized aggregation
+- **MLLM judges:** Qwen2.5-VL / LLaVA integration point
 - **Experiment tracking:** MLflow / Weights & Biases
-- **Batch processing:** RTX 4090 — 100-video batch in <12 minutes
+- **Batch processing:** report aggregation CLI for precomputed evaluation JSON
 
 ---
 
@@ -173,14 +173,14 @@ git clone https://github.com/chrismado/video-gen-eval
 cd video-gen-eval
 pip install -r requirements.txt
 
-# Evaluate a single video
-python -m pipeline.unified_pipeline --video path/to/video.mp4
+# Evaluate a single video with local physics heuristics only
+python -m pipeline.unified_pipeline --video path/to/video.mp4 --no-vbench --no-ivebench --no-tivibench
 
-# Full benchmark run
-python -m benchmarks.model_comparison --models runway-gen4 pika luma
+# Summarize bundled report JSON
+python -m benchmarks.model_comparison
 
-# EWMScore closed-loop evaluation
-python -m embodied.world_wrapper --model runway-gen4 --tasks all
+# Filter report rows by model name
+python -m benchmarks.model_comparison --models example-model-v1
 ```
 
 ---

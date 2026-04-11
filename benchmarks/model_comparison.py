@@ -47,6 +47,19 @@ def load_results_from_dir(results_dir: str) -> list[ResultDict]:
     return results
 
 
+def filter_results_by_model(results: list[ResultDict], models: list[str] | None) -> list[ResultDict]:
+    """Filter loaded reports by requested model names or video stems."""
+    if not models:
+        return results
+    wanted = {model.lower() for model in models}
+    filtered: list[ResultDict] = []
+    for result in results:
+        model_name = str(result.get("model_name", Path(result.get("video_path", "unknown")).stem)).lower()
+        if model_name in wanted:
+            filtered.append(result)
+    return filtered
+
+
 def extract_row(result: ResultDict) -> RowDict:
     """Extract display values from a pipeline report dict."""
     raw = result.get("raw_scores", {})
@@ -145,9 +158,16 @@ def main() -> None:
         default="benchmarks/results",
         help="Directory containing .report.json files",
     )
+    parser.add_argument(
+        "--models",
+        nargs="+",
+        default=None,
+        help="Optional model names to display from the loaded report files",
+    )
     args = parser.parse_args()
 
     results: list[ResultDict] = load_results_from_dir(args.results_dir)
+    results = filter_results_by_model(results, args.models)
     rows = [extract_row(r) for r in results]
     print_table(rows)
 

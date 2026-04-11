@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import cv2
 import numpy as np
 import pytest
 
@@ -12,6 +11,7 @@ from pipeline.batch_processor import BatchProcessor
 from pipeline.score_aggregator import ScoreAggregator
 from pipeline.unified_pipeline import PipelineReport, UnifiedPipeline
 
+cv2 = pytest.importorskip("cv2")
 pytestmark = pytest.mark.integration
 
 
