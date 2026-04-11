@@ -8,6 +8,34 @@ An evaluation prototype that explores how video model benchmarking can move from
 
 ---
 
+## Current Status
+
+This repo is now an honest evaluation prototype with one concrete integration path beyond pure scaffolding.
+
+- Local physics heuristics, EWM-style aggregation, and the unified reporting path are working today.
+- Adapter hooks for VBench, IVEBench, and TiViBench can now ingest exported JSON from official-style upstream runs.
+- The repo is strongest as a review and score-aggregation workflow, not as a replacement for the official benchmark environments themselves.
+
+## Validation Snapshot
+
+Verified locally on April 11, 2026:
+
+- `python -m pytest -q` -> `28 passed, 1 skipped`
+- `python -m pipeline.unified_pipeline --video sample.mp4 --no-physion --vbench-report ... --ivebench-report ... --tivibench-report ...`
+
+Observed result:
+
+- Unified report generated successfully
+- Sample external benchmark JSON was merged into the scorecard
+- `EWMScore` output: `85.05`
+
+Still prototype:
+
+- Official upstream benchmarks still run in their own native environments and are handed off here as exported JSON.
+- The MLLM judge path remains an integration point rather than a productionized service path.
+
+---
+
 ## Portfolio Context
 
 This repo is part of [Creative AI Workflows](https://chrismado.github.io/creative-ai-workflows/) ([source](https://github.com/chrismado/creative-ai-workflows)), a portfolio showcase connecting generative video, 3D scene review, creative QA, and enterprise deployment.
